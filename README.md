@@ -1,10 +1,8 @@
-
 ## Roadmap
 
 - Setup express server with mongodb database
 - Use typescript and mongoose
 - Code formate with Eslint and prettier
-
 
 ## Steps
 
@@ -13,53 +11,63 @@ create package.json file
 ```bash
   npm init
 ```
+
 install typescript as dev dependency
 
 ```bash
   yarn add -D typescript
 ```
+
 configure typescript
 
 ```bash
   tsc --init
 ```
+
 tsconfig.json add this code
+
 ```bash
-"module": "commonjs", 
+"include": ["src"], // which files to compile
+"exclude": ["node_modules"], // which files to skip
+"module": "commonjs",
 "rootDir": "./src",
-"outDir": "./dist", 
+"outDir": "./dist",
 ```
 
-
 install express
+
 ```bash
   yarn add express
 ```
 
-install  mongoose
+install mongoose
+
 ```bash
    yarn add mongoose
 ```
 
-install  dotenv then create file named .env 
+install dotenv then create file named .env
+
 ```bash
-   yarn add dotenv 
+   yarn add dotenv
 ```
 
-install  cors 
+install cors
+
 ```bash
-   yarn add cors 
+   yarn add cors
 ```
 
 create [.env] file and keep sensitive data
+
 ```bash
 NODE_ENV=development
 PORT=yourport
 DATABASE_URL=yourdburl
 ```
 
-
 create [config/idex.ts]
+
 ```bash
 import dotenv from 'dotenv'
 import path from 'path'
@@ -73,6 +81,7 @@ export default {
 ```
 
 create [app.ts] file
+
 ```bash
 import express, { Application, Request, Response } from 'express'
 import cors from 'cors'
@@ -95,12 +104,14 @@ export default app
 ```
 
 configure types
+
 ```bash
  yarn add -D @types/express
  yarn add -D @types/cors
 ```
 
 create [server.ts] file
+
 ```bash
 import mongoose from 'mongoose'
 import config from './config/index'
@@ -122,13 +133,14 @@ async function dbConnect() {
 dbConnect()
 ```
 
-
 install ts-node-dev as dev dependency
+
 ```bash
 yarn add ts-node-dev --dev
 ```
 
-add the code to the [package.json] file 
+add the code to the [package.json] file
+
 ```bash
   "scripts": {
     "start": "ts-node-dev --respawn --transpile-only src/server.ts"
@@ -136,13 +148,14 @@ add the code to the [package.json] file
 ```
 
 run server
+
 ```bash
 yarn start
 ```
 
 create [.gitignore] file and add the file name that doesn't need to send github
+
 ```bash
 node_modules
 .env
 ```
-
