@@ -25,6 +25,8 @@ configure typescript
 ```
 tsconfig.json add this code
 ```bash
+"include": ["src"], // which files to compile
+"exclude": ["node_modules"], // which files to skip
 "module": "commonjs", 
 "rootDir": "./src",
 "outDir": "./dist", 
@@ -144,5 +146,94 @@ create [.gitignore] file and add the file name that doesn't need to send github
 ```bash
 node_modules
 .env
+```
+
+### Install and configure ESlint, prettier, husky, lint-staged
+run as dependency
+```bash
+yarn add @typescript-eslint/eslint-plugin @typescript-eslint/parser eslint
+```
+
+run as dev dependency
+```bash
+yarn add -D eslint-config-prettier prettier husky lint-staged
+```
+
+#### .eslintrc file
+```
+{
+  "parser": "@typescript-eslint/parser",
+  "parserOptions": {
+    "ecmaVersion": 13,
+    "sourceType": "module"
+  },
+  "plugins": ["@typescript-eslint"],
+  // HERE
+  "extends": ["eslint:recommended", "plugin:@typescript-eslint/recommended", "prettier"],
+
+  "rules": {
+    "@typescript-eslint/no-unused-vars": "error",
+    "@typescript-eslint/consistent-type-definitions": ["error", "type"]
+  },
+
+  "env": {
+    "browser": true,
+    "es2021": true
+  }
+}
+```
+
+#### .eslintignore file
+```
+dist
+node_modules
+.env
+```
+
+#### .prettierrc file
+```
+{
+  "semi": false,
+  "singleQuote": true, 
+  "arrowParens": "avoid" 
+}
+```
+
+#### configure husky
+```
+yarn husky install
+yarn husky add .husky/pre-commit "yarn test"
+```
+
+#### .husky/pre-commit
+```
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+yarn lint-staged
+```
+
+#### package.json file add this code
+```
+{
+  "scripts": {
+     "lint:check": "eslint --ignore-path .eslintignore --ext .js,.ts .",
+     "lint:fix": "eslint . --fix",
+     "prettier:check": "prettier --ignore-path .gitignore --write \"**/*.+(js|ts|json)\"",
+     "prettier:fix": "prettier --write .",
+     "lint-prettier": "yarn lint:check && yarn prettier:check"
+   },
+   "lint-staged": {
+     "src/**/*.ts": "yarn lint-prettier"
+   }
+}
+```
+
+// settings.json (vs code settings)
+```
+{
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.formatOnSave": true
+}
 ```
 
