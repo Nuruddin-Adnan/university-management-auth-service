@@ -12,7 +12,9 @@ create package.json file
 
 ```bash
   npm init
+  configure "entry point: src/server.ts" when ask
 ```
+
 install typescript as dev dependency
 
 ```bash
@@ -61,7 +63,7 @@ DATABASE_URL=yourdburl
 ```
 
 
-create [config/idex.ts]
+create [config/index.ts]
 ```bash
 import dotenv from 'dotenv'
 import path from 'path'
@@ -69,8 +71,9 @@ import path from 'path'
 dotenv.config({ path: path.join(process.cwd(), '.env') })
 
 export default {
+  env: process.env.NODE_ENV,
   port: process.env.PORT,
-  database_url: process.env.DATABASE_URL
+  database_url: process.env.DATABASE_URL,
 }
 ```
 
@@ -149,9 +152,9 @@ node_modules
 ```
 
 ### Install and configure ESlint, prettier, husky, lint-staged
-run as dependency
+run as dev dependency
 ```bash
-yarn add @typescript-eslint/eslint-plugin @typescript-eslint/parser eslint
+yarn add -D @typescript-eslint/eslint-plugin @typescript-eslint/parser eslint
 ```
 
 run as dev dependency
@@ -168,17 +171,26 @@ yarn add -D eslint-config-prettier prettier husky lint-staged
     "sourceType": "module"
   },
   "plugins": ["@typescript-eslint"],
-  // HERE
-  "extends": ["eslint:recommended", "plugin:@typescript-eslint/recommended", "prettier"],
-
+  "extends": [
+    "eslint:recommended",
+    "plugin:@typescript-eslint/recommended",
+    "prettier"
+  ],
   "rules": {
-    "@typescript-eslint/no-unused-vars": "error",
+    "no-unused-vars": "error",
+    "prefer-const": "error",
+    "no-unused-expressions": "error",
+    "no-undef": "error",
+    "no-console": "warn",
     "@typescript-eslint/consistent-type-definitions": ["error", "type"]
   },
-
   "env": {
     "browser": true,
-    "es2021": true
+    "es2021": true,
+    "node": true
+  },
+  "globals": {
+    "process": "readonly"
   }
 }
 ```
@@ -193,7 +205,7 @@ node_modules
 #### .prettierrc file
 ```
 {
-  "semi": false,
+  "semi": true,
   "singleQuote": true, 
   "arrowParens": "avoid" 
 }
@@ -236,4 +248,385 @@ yarn lint-staged
   "editor.formatOnSave": true
 }
 ```
+
+// create .vscode/settings.json (on root directory)
+```
+{
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": true,
+    "source.fixAll.tslint": true,
+    "source.organizeImports": true
+  }
+}
+```
+
+#### error handle with winston , http-status and zod
+
+install as dependency
+```
+yarn add winston winston-daily-rotate-file http-status zod
+```
+
+//create src/interfaces/error.ts
+```
+export type IGenericErrorMessage = {
+  path: string | number;
+  message: string;
+};
+```
+
+//create src/interfaces/common.ts
+```
+import { IGenericErrorMessage } from './error';
+
+export type IGenericErrorResponse = {
+  statusCode: number;
+  message: string;
+  errorMessages: IGenericErrorMessage[];
+};
+```
+
+//create src/errors/ApiError.ts
+```
+class ApiError extends Error {
+  statusCode: number;
+
+  constructor(statusCode: number, message: string | undefined, stack = '') {
+    super(message);
+    this.statusCode = statusCode;
+    if (stack) {
+      this.stack = stack;
+    } else {
+      Error.captureStackTrace(this, this.constructor);
+    }
+  }
+}
+
+export default ApiError;
+```
+
+//create src/errors/handleValidationError.ts
+```
+import mongoose from 'mongoose';
+import { IGenericErrorResponse } from '../interfaces/common';
+import { IGenericErrorMessage } from '../interfaces/error';
+
+const handleValidationError = (
+  error: mongoose.Error.ValidationError
+): IGenericErrorResponse => {
+  const errors: IGenericErrorMessage[] = Object.values(error.errors).map(
+    (el: mongoose.Error.ValidatorError | mongoose.Error.CastError) => {
+      return {
+        path: el?.path,
+        message: el?.message,
+      };
+    }
+  );
+  const statusCode = 400;
+  return {
+    statusCode,
+    message: 'Validation Error',
+    errorMessages: errors,
+  };
+};
+
+export default handleValidationError;
+```
+
+
+//create src/errors/handleZodError.ts
+```
+import { ZodError, ZodIssue } from 'zod';
+import { IGenericErrorResponse } from '../interfaces/common';
+import { IGenericErrorMessage } from '../interfaces/error';
+
+const handleZodError = (error: ZodError): IGenericErrorResponse => {
+  const errors: IGenericErrorMessage[] = error.issues.map((issue: ZodIssue) => {
+    return {
+      path: issue?.path[issue.path.length - 1],
+      message: issue?.message,
+    };
+  });
+
+  const statusCode = 400;
+
+  return {
+    statusCode,
+    message: 'Validation Error',
+    errorMessages: errors,
+  };
+};
+
+export default handleZodError;
+```
+
+//create src/errors/handleCastError.ts
+```
+import mongoose from 'mongoose';
+import { IGenericErrorMessage } from '../interfaces/error';
+
+const handleCastError = (error: mongoose.Error.CastError) => {
+  const errors: IGenericErrorMessage[] = [
+    {
+      path: error.path,
+      message: 'Invalid Id',
+    },
+  ];
+
+  const statusCode = 400;
+  return {
+    statusCode,
+    message: 'Cast Error',
+    errorMessages: errors,
+  };
+};
+
+export default handleCastError;
+```
+//create src/shared/logger.ts
+
+```
+/* eslint-disable no-undef */
+import path from 'path';
+import { createLogger, format, transports } from 'winston';
+import DailyRotateFile from 'winston-daily-rotate-file';
+const { combine, timestamp, label, printf } = format;
+
+//Customm Log Format
+
+const myFormat = printf(({ level, message, label, timestamp }) => {
+  const date = new Date(timestamp);
+  const hour = date.getHours();
+  const minutes = date.getMinutes();
+  const seconds = date.getSeconds();
+  return `${date.toDateString()} ${hour}:${minutes}:${seconds} } [${label}] ${level}: ${message}`;
+});
+
+const logger = createLogger({
+  level: 'info',
+  format: combine(label({ label: 'YOURAPP_NAME' }), timestamp(), myFormat),
+  transports: [
+    new transports.Console(),
+    new DailyRotateFile({
+      filename: path.join(
+        process.cwd(),
+        'logs',
+        'winston',
+        'successes',
+        'YOURAPP_NAME-%DATE%-success.log'
+      ),
+      datePattern: 'YYYY-DD-MM-HH',
+      zippedArchive: true,
+      maxSize: '20m',
+      maxFiles: '14d',
+    }),
+  ],
+});
+
+const errorlogger = createLogger({
+  level: 'error',
+  format: combine(label({ label: 'YOURAPP_NAME' }), timestamp(), myFormat),
+  transports: [
+    new transports.Console(),
+    new DailyRotateFile({
+      filename: path.join(
+        process.cwd(),
+        'logs',
+        'winston',
+        'errors',
+        'YOURAPP_NAME-%DATE%-error.log'
+      ),
+      datePattern: 'YYYY-DD-MM-HH',
+      zippedArchive: true,
+      maxSize: '20m',
+      maxFiles: '14d',
+    }),
+  ],
+});
+
+export { errorlogger, logger };
+```
+
+//Change src/server.ts
+```
+import { Server } from 'http';
+import mongoose from 'mongoose';
+import app from './app';
+import config from './config/index';
+import { errorlogger, logger } from './shared/logger';
+
+process.on('uncaughtException', error => {
+  errorlogger.error(error);
+  process.exit(1);
+});
+
+let server: Server;
+
+async function dbConnect() {
+  try {
+    await mongoose.connect(config.database_url as string);
+    logger.info(`🛢   Database is connected successfully`);
+
+    server = app.listen(config.port, () => {
+      logger.info(`Application  listening on port ${config.port}`);
+    });
+  } catch (err) {
+    errorlogger.error('Failed to connect database', err);
+  }
+
+  process.on('unhandledRejection', error => {
+    if (server) {
+      server.close(() => {
+        errorlogger.error(error);
+        process.exit(1);
+      });
+    } else {
+      process.exit(1);
+    }
+  });
+}
+
+dbConnect();
+
+process.on('SIGTERM', () => {
+  logger.info('SIGTERM is received');
+  if (server) {
+    server.close();
+  }
+});
+```
+
+//create src/app/middlewares/globalErrorHandler.ts
+```
+/* eslint-disable no-unused-vars */
+/* eslint-disable no-console */
+/* eslint-disable no-unused-expressions */
+import { ErrorRequestHandler, NextFunction, Request, Response } from 'express';
+import config from '../../config';
+import ApiError from '../../errors/ApiError';
+import handleValidationError from '../../errors/handleValidationError';
+
+import { ZodError } from 'zod';
+import handleCastError from '../../errors/handleCastError';
+import handleZodError from '../../errors/handleZodError';
+import { IGenericErrorMessage } from '../../interfaces/error';
+import { errorlogger } from '../../shared/logger';
+
+const globalErrorHandler: ErrorRequestHandler = (
+  error,
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  config.env === 'development'
+    ? console.log(`🐱‍🏍 globalErrorHandler ~~`, { error })
+    : errorlogger.error(`🐱‍🏍 globalErrorHandler ~~`, error);
+
+  let statusCode = 500;
+  let message = 'Something went wrong !';
+  let errorMessages: IGenericErrorMessage[] = [];
+
+  if (error?.name === 'ValidationError') {
+    const simplifiedError = handleValidationError(error);
+    statusCode = simplifiedError.statusCode;
+    message = simplifiedError.message;
+    errorMessages = simplifiedError.errorMessages;
+  } else if (error instanceof ZodError) {
+    const simplifiedError = handleZodError(error);
+    statusCode = simplifiedError.statusCode;
+    message = simplifiedError.message;
+    errorMessages = simplifiedError.errorMessages;
+  } else if (error?.name === 'CastError') {
+    const simplifiedError = handleCastError(error);
+    statusCode = simplifiedError.statusCode;
+    message = simplifiedError.message;
+    errorMessages = simplifiedError.errorMessages;
+  } else if (error instanceof ApiError) {
+    statusCode = error?.statusCode;
+    message = error.message;
+    errorMessages = error?.message
+      ? [
+          {
+            path: '',
+            message: error?.message,
+          },
+        ]
+      : [];
+  } else if (error instanceof Error) {
+    message = error?.message;
+    errorMessages = error?.message
+      ? [
+          {
+            path: '',
+            message: error?.message,
+          },
+        ]
+      : [];
+  }
+
+  res.status(statusCode).json({
+    success: false,
+    message,
+    errorMessages,
+    stack: config.env !== 'production' ? error?.stack : undefined,
+  });
+};
+
+export default globalErrorHandler;
+
+```
+
+//create src/app/middlewares/validateRequest.ts
+```
+import { NextFunction, Request, Response } from 'express';
+import { AnyZodObject, ZodEffects } from 'zod';
+
+const validateRequest =
+  (schema: AnyZodObject | ZodEffects<AnyZodObject>) =>
+  async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      await schema.parseAsync({
+        body: req.body,
+        query: req.query,
+        params: req.params,
+        cookies: req.cookies,
+      });
+      return next();
+    } catch (error) {
+      next(error);
+    }
+  };
+
+export default validateRequest;
+```
+
+//Add this code to src/app.ts
+```
+import express, { Application, NextFunction, Request, Response } from 'express';
+import httpStatus from 'http-status';
+import globalErrorHandler from './app/middlewares/globalErrorHandler';
+
+//global error handler
+app.use(globalErrorHandler);
+
+//handle not found
+app.use((req: Request, res: Response, next: NextFunction) => {
+  res.status(httpStatus.NOT_FOUND).json({
+    success: false,
+    message: 'Not Found',
+    errorMessages: [
+      {
+        path: req.originalUrl,
+        message: 'API Not Found',
+      },
+    ],
+  });
+  next();
+});
+```
+
+
+
+
+
 
