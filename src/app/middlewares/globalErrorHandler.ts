@@ -1,7 +1,7 @@
 /* eslint-disable no-unused-vars */
 /* eslint-disable no-console */
 /* eslint-disable no-unused-expressions */
-import { ErrorRequestHandler, Request, Response, NextFunction } from 'express';
+import { ErrorRequestHandler, NextFunction, Request, Response } from 'express';
 import config from '../../config';
 import ApiError from '../../errors/ApiError';
 import handleValidationError from '../../errors/handleValidationError';

@@ -5,7 +5,6 @@
 - Use typescript and mongoose
 - Code formate with Eslint and prettier
 
-
 ## Steps
 
 create package.json file
@@ -130,7 +129,7 @@ dbConnect()
 
 install ts-node-dev as dev dependency
 ```bash
-yarn add ts-node-dev --dev
+yarn add -D ts-node-dev 
 ```
 
 add the code to the [package.json] file 
@@ -154,13 +153,9 @@ node_modules
 ### Install and configure ESlint, prettier, husky, lint-staged
 run as dev dependency
 ```bash
-yarn add -D @typescript-eslint/eslint-plugin @typescript-eslint/parser eslint
+yarn add -D @typescript-eslint/eslint-plugin @typescript-eslint/parser eslint eslint-config-prettier prettier husky lint-staged
 ```
 
-run as dev dependency
-```bash
-yarn add -D eslint-config-prettier prettier husky lint-staged
-```
 
 #### .eslintrc file
 ```
@@ -217,7 +212,7 @@ yarn husky install
 yarn husky add .husky/pre-commit "yarn test"
 ```
 
-#### .husky/pre-commit
+#### .husky/pre-commit add this code
 ```
 #!/usr/bin/env sh
 . "$(dirname -- "$0")/_/husky.sh"
@@ -624,6 +619,52 @@ app.use((req: Request, res: Response, next: NextFunction) => {
   next();
 });
 ```
+
+#### How to use handle error
+
+src/app.ts
+```
+//global error handler
+app.use(globalErrorHandler);
+```
+
+use logger to save error and success log
+```
+//success logger
+ logger.info('success message here')
+
+ //Error logger
+ errorlogger.error('Error message here')
+
+ //For globalErrorHandler
+ next('Error message here');
+
+ <!-- Example -->
+import { RequestHandler } from 'express';
+import { createUserService } from './user.service';
+import { errorlogger } from '../../../shared/logger';
+
+const createUser: RequestHandler = async (req, res, next) => {
+  try {
+    const result = await createUserService(req.body);
+    res.status(200).json({
+      status: 'success',
+      message: 'User created successfully',
+      data: result,
+    });
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      errorlogger.error(error);
+      next(error);
+    }
+  }
+};
+
+export const userController = {
+  createUser,
+};
+ ```
+
 
 
 
