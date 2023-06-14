@@ -628,7 +628,7 @@ src/app.ts
 app.use(globalErrorHandler);
 ```
 
-use logger to save error and success log
+use of error and error/success log
 ```
 //success logger
  logger.info('success message here')
@@ -636,8 +636,11 @@ use logger to save error and success log
  //Error logger
  errorlogger.error('Error message here')
 
- //For globalErrorHandler
+ //Use of globalErrorHandler
  next('Error message here');
+
+ //Use of Api error
+throw new ApiError(400, 'Your error message here');
 
  <!-- Example -->
 import { RequestHandler } from 'express';
@@ -664,6 +667,181 @@ export const userController = {
   createUser,
 };
  ```
+
+ ### Validation schema using zod before going controller
+ zod Validation use in the router lavel
+
+#### Stepes:
+
+— Create zod schema
+
+ — Make `validateRequest` middleware function to receive  `Any Zod Object` and parseAsync req,  res and next before going controller
+
+ — Use the middleware in router lavel
+
+ #### Create src/app/modules/user/user.validation.ts file (zod schema)
+ ```
+ import { z } from 'zod';
+
+const createUserZodSchema = z.object({
+  body: z.object({
+    role: z.string({
+      required_error: 'Role is required',
+    }),
+    password: z.string().optional(),
+  }),
+});
+
+export const UserValidation = {
+  createUserZodSchema,
+};
+ ```
+
+  #### Create src/app/middlewares/validateRequest.ts file (validateRequest middleware)
+ ```
+import { NextFunction, Request, Response } from 'express';
+import { AnyZodObject, ZodEffects } from 'zod';
+
+const validateRequest =
+  (schema: AnyZodObject | ZodEffects<AnyZodObject>) =>
+  async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      await schema.parseAsync({
+        body: req.body,
+        query: req.query,
+        params: req.params,
+        cookies: req.cookies,
+      });
+      return next();
+    } catch (error) {
+      next(error);
+    }
+  };
+
+export default validateRequest;
+ ```
+
+   #### Use the middleware in router lavel
+ ```
+import express from 'express';
+import { UserController } from './user.controller';
+import validateRequest from '../../middlewares/validateRequest';
+import { UserValidation } from './user.validation';
+
+const router = express.Router();
+
+router.post(
+  '/create-user',
+  validateRequest(UserValidation.createUserZodSchema),
+  UserController.createUser
+);
+
+export const UserRoutes = router;
+ ```
+
+ ### Optimize controller code
+
+ #### create src/shared/catchAsync.ts
+ ```
+ import { NextFunction, Request, RequestHandler, Response } from 'express';
+
+const catchAsync =
+  (fn: RequestHandler) =>
+  async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      await fn(req, res, next);
+    } catch (error) {
+      next(error);
+    }
+  };
+
+export default catchAsync;
+```
+
+ #### create src/shared/sendResponse.ts
+ ```
+ import { Response } from 'express';
+
+type IApiReponse<T> = {
+  statusCode: number;
+  success: boolean;
+  message?: string | null;
+  meta?: {
+    page: number;
+    limit: number;
+    total: number;
+  };
+  data?: T | null;
+};
+
+const sendResponse = <T>(res: Response, data: IApiReponse<T>): void => {
+  const responseData: IApiReponse<T> = {
+    statusCode: data.statusCode,
+    success: data.success,
+    message: data.message || null,
+    meta: data.meta || null || undefined,
+    data: data.data || null,
+  };
+
+  res.status(data.statusCode).json(responseData);
+};
+
+export default sendResponse;
+```
+
+#### uses in controller
+//Example  user.controller.ts
+```
+import { Request, Response } from 'express';
+import { UserService } from './user.service';
+import catchAsync from '../../../shared/catchAsync';
+import sendResponse from '../../../shared/sendResponse';
+import { IUser } from './user.interface';
+import httpStatus from 'http-status';
+
+const createUser = catchAsync(async (req: Request, res: Response) => {
+  const result = await UserService.createUser(req.body);
+
+  sendResponse<IUser>(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: 'User created successfully',
+    data: result,
+  });
+});
+
+export const UserController = {
+  createUser,
+};
+```
+
+### Optimize routes
+#### create src/app/Router/index.ts
+```
+import express from 'express';
+import { UserRoutes } from '../modules/user/user.route';academicSemester.route';
+
+const router = express.Router();
+
+const moduleRoutes = [
+  {
+    path: '/users',
+    route: UserRoutes,
+  }
+];
+
+moduleRoutes.forEach(route => router.use(route.path, route.route));
+
+export default router;
+```
+
+#### Change src/app.ts/
+```
+// Application routes
+app.use('/api/v1', routes);
+```
+
+ 
 
 
 
