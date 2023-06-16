@@ -1,4 +1,4 @@
-import { Schema, model } from 'mongoose';
+import { Query, Schema, model } from 'mongoose';
 import { IAcademicSemester } from './academicSemester.interface';
 import {
   academicSemesterCodes,
@@ -52,6 +52,28 @@ academicSemesterSchema.pre('save', async function (next) {
     throw new ApiError(
       httpStatus.CONFLICT,
       'Academic semester is already exist !'
+    );
+  }
+  next();
+});
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type UpdateQuery = Query<any, Document> & {
+  _update: {
+    title: string;
+    year: number;
+  };
+};
+
+academicSemesterSchema.pre('findOneAndUpdate', async function (next) {
+  const query = this as UpdateQuery;
+  const { title, year } = query._update;
+
+  const isExist = await AcademicSemester.findOne({ title, year });
+  if (isExist) {
+    throw new ApiError(
+      httpStatus.CONFLICT,
+      'Academic semester already exists!'
     );
   }
   next();
