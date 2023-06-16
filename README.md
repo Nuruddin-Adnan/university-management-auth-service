@@ -5,64 +5,77 @@
 - Use typescript and mongoose
 - Code formate with Eslint and prettier
 
+## Roadmap
+
+- Setup express server with mongodb database
+- Use typescript and mongoose
+- Code formate with Eslint and prettier
+
 ## Steps
 
-create package.json file
+#### create package.json file
 
 ```bash
   npm init
   configure "entry point: src/server.ts" when ask
 ```
 
-install typescript as dev dependency
+#### install typescript as dev dependency
 
 ```bash
   yarn add -D typescript
 ```
-configure typescript
+
+#### configure typescript
 
 ```bash
   tsc --init
 ```
-tsconfig.json add this code
+
+#### tsconfig.json add this code
+
 ```bash
 "include": ["src"], // which files to compile
 "exclude": ["node_modules"], // which files to skip
-"module": "commonjs", 
+"module": "commonjs",
 "rootDir": "./src",
-"outDir": "./dist", 
+"outDir": "./dist",
 ```
 
+#### install express
 
-install express
 ```bash
   yarn add express
 ```
 
-install  mongoose
+#### install mongoose
+
 ```bash
    yarn add mongoose
 ```
 
-install  dotenv then create file named .env 
+#### install dotenv then create file named .env
+
 ```bash
-   yarn add dotenv 
+   yarn add dotenv
 ```
 
-install  cors 
+#### install cors
+
 ```bash
-   yarn add cors 
+   yarn add cors
 ```
 
-create [.env] file and keep sensitive data
+#### create [.env] file and keep sensitive data
+
 ```bash
 NODE_ENV=development
 PORT=yourport
 DATABASE_URL=yourdburl
 ```
 
+#### create [src/config/index.ts]
 
-create [config/index.ts]
 ```bash
 import dotenv from 'dotenv'
 import path from 'path'
@@ -76,7 +89,8 @@ export default {
 }
 ```
 
-create [app.ts] file
+#### create [src/app.ts] file
+
 ```bash
 import express, { Application, Request, Response } from 'express'
 import cors from 'cors'
@@ -98,13 +112,15 @@ app.get('/', async (req: Request, res: Response) => {
 export default app
 ```
 
-configure types
+#### configure types
+
 ```bash
  yarn add -D @types/express
  yarn add -D @types/cors
 ```
 
-create [server.ts] file
+#### create [src/server.ts] file
+
 ```bash
 import mongoose from 'mongoose'
 import config from './config/index'
@@ -126,38 +142,43 @@ async function dbConnect() {
 dbConnect()
 ```
 
+#### install ts-node-dev as dev dependency
 
-install ts-node-dev as dev dependency
 ```bash
-yarn add -D ts-node-dev 
+yarn add -D ts-node-dev
 ```
 
-add the code to the [package.json] file 
+#### add the code to the [package.json] file
+
 ```bash
   "scripts": {
     "start": "ts-node-dev --respawn --transpile-only src/server.ts"
   }
 ```
 
-run server
+#### run server
+
 ```bash
 yarn start
 ```
 
-create [.gitignore] file and add the file name that doesn't need to send github
+#### create [.gitignore] file and add the file name that doesn't need to send github
+
 ```bash
 node_modules
 .env
 ```
 
 ### Install and configure ESlint, prettier, husky, lint-staged
+
 run as dev dependency
+
 ```bash
 yarn add -D @typescript-eslint/eslint-plugin @typescript-eslint/parser eslint eslint-config-prettier prettier husky lint-staged
 ```
 
-
 #### .eslintrc file
+
 ```
 {
   "parser": "@typescript-eslint/parser",
@@ -191,6 +212,7 @@ yarn add -D @typescript-eslint/eslint-plugin @typescript-eslint/parser eslint es
 ```
 
 #### .eslintignore file
+
 ```
 dist
 node_modules
@@ -198,21 +220,32 @@ node_modules
 ```
 
 #### .prettierrc file
+
 ```
 {
   "semi": true,
-  "singleQuote": true, 
-  "arrowParens": "avoid" 
+  "singleQuote": true,
+  "arrowParens": "avoid"
 }
 ```
 
+#### git init
+
+<!-- if already exists ignore this  -->
+
+```
+git init
+```
+
 #### configure husky
+
 ```
 yarn husky install
 yarn husky add .husky/pre-commit "yarn test"
 ```
 
 #### .husky/pre-commit add this code
+
 ```
 #!/usr/bin/env sh
 . "$(dirname -- "$0")/_/husky.sh"
@@ -221,6 +254,7 @@ yarn lint-staged
 ```
 
 #### package.json file add this code
+
 ```
 {
   "scripts": {
@@ -236,7 +270,8 @@ yarn lint-staged
 }
 ```
 
-// settings.json (vs code settings)
+#### settings.json (vs code settings)
+
 ```
 {
   "editor.defaultFormatter": "esbenp.prettier-vscode",
@@ -244,7 +279,8 @@ yarn lint-staged
 }
 ```
 
-// create .vscode/settings.json (on root directory)
+#### create .vscode/settings.json (on root directory)
+
 ```
 {
   "editor.codeActionsOnSave": {
@@ -255,14 +291,16 @@ yarn lint-staged
 }
 ```
 
-#### error handle with winston , http-status and zod
+### error handle with winston , http-status and zod
 
-install as dependency
+#### install as dependency
+
 ```
 yarn add winston winston-daily-rotate-file http-status zod
 ```
 
-//create src/interfaces/error.ts
+#### create src/interfaces/error.ts
+
 ```
 export type IGenericErrorMessage = {
   path: string | number;
@@ -270,7 +308,8 @@ export type IGenericErrorMessage = {
 };
 ```
 
-//create src/interfaces/common.ts
+#### create src/interfaces/common.ts
+
 ```
 import { IGenericErrorMessage } from './error';
 
@@ -281,7 +320,8 @@ export type IGenericErrorResponse = {
 };
 ```
 
-//create src/errors/ApiError.ts
+#### create src/errors/ApiError.ts
+
 ```
 class ApiError extends Error {
   statusCode: number;
@@ -300,7 +340,8 @@ class ApiError extends Error {
 export default ApiError;
 ```
 
-//create src/errors/handleValidationError.ts
+#### create src/errors/handleValidationError.ts
+
 ```
 import mongoose from 'mongoose';
 import { IGenericErrorResponse } from '../interfaces/common';
@@ -328,8 +369,8 @@ const handleValidationError = (
 export default handleValidationError;
 ```
 
+#### create src/errors/handleZodError.ts
 
-//create src/errors/handleZodError.ts
 ```
 import { ZodError, ZodIssue } from 'zod';
 import { IGenericErrorResponse } from '../interfaces/common';
@@ -355,7 +396,8 @@ const handleZodError = (error: ZodError): IGenericErrorResponse => {
 export default handleZodError;
 ```
 
-//create src/errors/handleCastError.ts
+#### create src/errors/handleCastError.ts
+
 ```
 import mongoose from 'mongoose';
 import { IGenericErrorMessage } from '../interfaces/error';
@@ -378,7 +420,8 @@ const handleCastError = (error: mongoose.Error.CastError) => {
 
 export default handleCastError;
 ```
-//create src/shared/logger.ts
+
+#### create src/shared/logger.ts
 
 ```
 /* eslint-disable no-undef */
@@ -442,7 +485,8 @@ const errorlogger = createLogger({
 export { errorlogger, logger };
 ```
 
-//Change src/server.ts
+#### Change src/server.ts
+
 ```
 import { Server } from 'http';
 import mongoose from 'mongoose';
@@ -491,7 +535,8 @@ process.on('SIGTERM', () => {
 });
 ```
 
-//create src/app/middlewares/globalErrorHandler.ts
+#### create src/app/middlewares/globalErrorHandler.ts
+
 ```
 /* eslint-disable no-unused-vars */
 /* eslint-disable no-console */
@@ -571,7 +616,8 @@ export default globalErrorHandler;
 
 ```
 
-//create src/app/middlewares/validateRequest.ts
+#### create src/app/middlewares/validateRequest.ts
+
 ```
 import { NextFunction, Request, Response } from 'express';
 import { AnyZodObject, ZodEffects } from 'zod';
@@ -595,7 +641,8 @@ const validateRequest =
 export default validateRequest;
 ```
 
-//Add this code to src/app.ts
+#### Add this code to src/app.ts
+
 ```
 import express, { Application, NextFunction, Request, Response } from 'express';
 import httpStatus from 'http-status';
@@ -623,12 +670,14 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 #### How to use handle error
 
 src/app.ts
+
 ```
 //global error handler
 app.use(globalErrorHandler);
 ```
 
 use of error and error/success log
+
 ```
 //success logger
  logger.info('success message here')
@@ -666,63 +715,67 @@ const createUser: RequestHandler = async (req, res, next) => {
 export const userController = {
   createUser,
 };
- ```
+```
 
- ### Validation schema using zod before going controller
- zod Validation use in the router lavel
+### Validation schema using zod before going controller
+
+zod Validation use in the router lavel
 
 #### Stepes:
 
 — Create zod schema
 
- — Make `validateRequest` middleware function to receive  `Any Zod Object` and parseAsync req,  res and next before going controller
+— Make `validateRequest` middleware function to receive `Any Zod Object` and parseAsync req, res and next before going controller
 
- — Use the middleware in router lavel
+— Use the middleware in router lavel
 
- #### Create src/app/modules/user/user.validation.ts file (zod schema)
- ```
- import { z } from 'zod';
+#### Create src/app/modules/user/user.validation.ts file (zod schema)
+
+```
+import { z } from 'zod';
 
 const createUserZodSchema = z.object({
-  body: z.object({
-    role: z.string({
-      required_error: 'Role is required',
-    }),
-    password: z.string().optional(),
-  }),
+ body: z.object({
+   role: z.string({
+     required_error: 'Role is required',
+   }),
+   password: z.string().optional(),
+ }),
 });
 
 export const UserValidation = {
-  createUserZodSchema,
+ createUserZodSchema,
 };
- ```
+```
 
-  #### Create src/app/middlewares/validateRequest.ts file (validateRequest middleware)
- ```
+#### Create src/app/middlewares/validateRequest.ts file (validateRequest middleware)
+
+```
 import { NextFunction, Request, Response } from 'express';
 import { AnyZodObject, ZodEffects } from 'zod';
 
 const validateRequest =
-  (schema: AnyZodObject | ZodEffects<AnyZodObject>) =>
-  async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    try {
-      await schema.parseAsync({
-        body: req.body,
-        query: req.query,
-        params: req.params,
-        cookies: req.cookies,
-      });
-      return next();
-    } catch (error) {
-      next(error);
-    }
-  };
+ (schema: AnyZodObject | ZodEffects<AnyZodObject>) =>
+ async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+   try {
+     await schema.parseAsync({
+       body: req.body,
+       query: req.query,
+       params: req.params,
+       cookies: req.cookies,
+     });
+     return next();
+   } catch (error) {
+     next(error);
+   }
+ };
 
 export default validateRequest;
- ```
+```
 
-   #### Use the middleware in router lavel
- ```
+#### Use the middleware in router lavel
+
+```
 import express from 'express';
 import { UserController } from './user.controller';
 import validateRequest from '../../middlewares/validateRequest';
@@ -731,66 +784,70 @@ import { UserValidation } from './user.validation';
 const router = express.Router();
 
 router.post(
-  '/create-user',
-  validateRequest(UserValidation.createUserZodSchema),
-  UserController.createUser
+ '/create-user',
+ validateRequest(UserValidation.createUserZodSchema),
+ UserController.createUser
 );
 
 export const UserRoutes = router;
- ```
+```
 
- ### Optimize controller code
+### Optimize controller code
 
- #### create src/shared/catchAsync.ts
- ```
- import { NextFunction, Request, RequestHandler, Response } from 'express';
+#### create src/shared/catchAsync.ts
+
+```
+import { NextFunction, Request, RequestHandler, Response } from 'express';
 
 const catchAsync =
-  (fn: RequestHandler) =>
-  async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    try {
-      await fn(req, res, next);
-    } catch (error) {
-      next(error);
-    }
-  };
+ (fn: RequestHandler) =>
+ async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+   try {
+     await fn(req, res, next);
+   } catch (error) {
+     next(error);
+   }
+ };
 
 export default catchAsync;
 ```
 
- #### create src/shared/sendResponse.ts
- ```
- import { Response } from 'express';
+#### create src/shared/sendResponse.ts
+
+```
+import { Response } from 'express';
 
 type IApiReponse<T> = {
-  statusCode: number;
-  success: boolean;
-  message?: string | null;
-  meta?: {
-    page: number;
-    limit: number;
-    total: number;
-  };
-  data?: T | null;
+ statusCode: number;
+ success: boolean;
+ message?: string | null;
+ meta?: {
+   page: number;
+   limit: number;
+   total: number;
+ };
+ data?: T | null;
 };
 
 const sendResponse = <T>(res: Response, data: IApiReponse<T>): void => {
-  const responseData: IApiReponse<T> = {
-    statusCode: data.statusCode,
-    success: data.success,
-    message: data.message || null,
-    meta: data.meta || null || undefined,
-    data: data.data || null,
-  };
+ const responseData: IApiReponse<T> = {
+   statusCode: data.statusCode,
+   success: data.success,
+   message: data.message || null,
+   meta: data.meta || null || undefined,
+   data: data.data || null,
+ };
 
-  res.status(data.statusCode).json(responseData);
+ res.status(data.statusCode).json(responseData);
 };
 
 export default sendResponse;
 ```
 
 #### uses in controller
-//Example  user.controller.ts
+
+//Example user.controller.ts
+
 ```
 import { Request, Response } from 'express';
 import { UserService } from './user.service';
@@ -806,6 +863,7 @@ const createUser = catchAsync(async (req: Request, res: Response) => {
     statusCode: httpStatus.OK,
     success: true,
     message: 'User created successfully',
+     // meta: result.meta,
     data: result,
   });
 });
@@ -816,7 +874,9 @@ export const UserController = {
 ```
 
 ### Optimize routes
+
 #### create src/app/Router/index.ts
+
 ```
 import express from 'express';
 import { UserRoutes } from '../modules/user/user.route';academicSemester.route';
@@ -836,16 +896,291 @@ export default router;
 ```
 
 #### Change src/app.ts/
+
 ```
 // Application routes
 app.use('/api/v1', routes);
 ```
 
- 
+## Filters query
+
+#### create src/interfaces/queryFilters.ts
+```
+export type IFilters = {
+  sort?: string;
+  page?: string;
+  limit?: string;
+  fields?: string;
+  [key: string]: string | number | undefined;
+};
+
+export type IQueries = {
+  fields?: string;
+  sort?: string;
+  skip?: number;
+  limit?: number;
+  [key: string]: string | number | undefined;
+};
+```
+
+#### create src/shared/queryFilters.ts
+```
+import { Request } from 'express';
+import { IFilters, IQueries } from '../interfaces/queryFilters';
+
+const queryFilters = (
+  query: Record<string, string | undefined>,
+  req: Request
+) => {
+  let filters: IFilters = { ...query };
+  const queries: IQueries = {};
+
+  // sort, page, limit -> exclude
+  const excludeFields: string[] = ['sort', 'page', 'limit', 'fields'];
+  excludeFields.forEach((field: string) => delete filters[field]);
+
+  // gt, gte, lt, lte
+  let filtersString: string = JSON.stringify(filters);
+  filtersString = filtersString.replace(
+    /\b(gt|gte|lt|lte)\b/g,
+    (match: string) => `$${match}`
+  );
+
+  filters = JSON.parse(filtersString);
+
+  if (req.query.fields) {
+    const fields: string = (req.query.fields as string).split(',').join(' ');
+    queries.fields = fields;
+  }
+
+  if (req.query.sort) {
+    const sort: string = (req.query.sort as string).split(',').join(' ');
+    queries.sort = sort;
+  }
+
+  if (req.query.page || req.query.limit) {
+    const { page = '1', limit = '10' } = req.query as {
+      page?: string;
+      limit?: string;
+    };
+    const skip: number = (parseInt(page, 10) - 1) * parseInt(limit, 10);
+
+    queries.skip = skip;
+    queries.limit = parseInt(limit, 10);
+  }
+
+  return {
+    filters,
+    queries,
+  };
+};
+
+export default queryFilters;
+
+```
+
+### using queryFilters
+
+#### in controller file
+<!-- Example -->
+```
+import { Request, Response } from 'express';
+import { UserService } from './user.service';
+import catchAsync from '../../../shared/catchAsync';
+import sendResponse from '../../../shared/sendResponse';
+import { IUser } from './user.interface';
+import httpStatus from 'http-status';
+import queryFilters from '../../../shared/queryFilters';
 
 
+const getAllUsers = catchAsync(async (req: Request, res: Response) => {
+
+  // filters by using queryFilters function
+  const filters = queryFilters(
+    req.query as Record<string, string | undefined>,
+    req
+  );
+
+  const result = await UserService.getAllUsers(
+    filters.filters,
+    filters.queries
+  );
+
+  sendResponse<IUser[]>(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: 'Semesters retrieved successfully !',
+    meta: result.meta,
+    data: result.data,
+  });
+});
+
+export const UserController = {
+  getAllUsers,
+};
+
+```
+
+#### in service file
+```
+import { IUser } from './user.interface';
+import { User } from './user.model';
+import { IFilters, IQueries } from '../../../interfaces/queryFilters';
+import { IGenericResponse } from '../../../interfaces/common';
 
 
+const getAllUsers = async (
+  filters: IFilters,
+  queries: IQueries
+): Promise<IGenericResponse<IUser[]>> => {
+  const { limit = 0, skip, fields, sort } = queries;
 
+  const resultQuery = User.find(filters)
+    .skip(skip as number)
+    .select(fields as string)
+    .sort(sort)
+    .limit(limit as number);
+
+  const [result, total] = await Promise.all([
+    resultQuery.exec(),
+    User.countDocuments(filters),
+  ]);
+
+  const page = Math.ceil(total / limit);
+
+  return {
+    meta: {
+      page,
+      limit,
+      total,
+    },
+    data: result,
+  };
+};
+
+export const UserService = {
+  getAllUsers,
+};
+
+```
+
+## Search function
+
+#### create src/shared/searcher.ts
+```
+import { IFilters } from '../interfaces/queryFilters';
+
+const searcher = (filters: IFilters, arrayOfSearchFields: string[]) => {
+  const { search, ...filtersData } = filters;
+  const andConditions = [];
+
+  if (search) {
+    andConditions.push({
+      $or: arrayOfSearchFields.map((field: string) => ({
+        [field]: {
+          $regex: search,
+          $options: 'i',
+        },
+      })),
+    });
+  }
+
+  if (Object.keys(filtersData).length) {
+    andConditions.push({
+      $and: Object.entries(filtersData).map(([field, value]) => ({
+        [field]: value,
+      })),
+    });
+  }
+
+  const conditions = andConditions.length > 0 ? { $and: andConditions } : {};
+
+  return conditions;
+};
+
+export default searcher;
+
+```
+
+#### using search with queryFilters in service file
+<!-- Example user service -->
+```
+import { IUser } from './user.interface';
+import { User } from './user.model';
+import { IFilters, IQueries } from '../../../interfaces/queryFilters';
+import searcher from '../../../shared/searcher';
+import { IGenericResponse } from '../../../interfaces/common';
+
+
+const getAllUsers = async (
+  filters: IFilters,
+  queries: IQueries
+): Promise<IGenericResponse<IUser[]>> => {
+  const conditions = searcher(filters, ['role', 'id']);
+  const { limit = 0, skip, fields, sort } = queries;
+
+  const resultQuery = User.find(conditions)
+    .skip(skip as number)
+    .select(fields as string)
+    .sort(sort)
+    .limit(limit as number);
+
+  const [result, total] = await Promise.all([
+    resultQuery.exec(),
+    User.countDocuments(conditions),
+  ]);
+
+  const page = Math.ceil(total / limit);
+
+  return {
+    meta: {
+      page,
+      limit,
+      total,
+    },
+    data: result,
+  };
+};
+
+export const UserService = {
+  getAllUsers,
+};
+
+```
+
+#### Some Example Api for filters and search
+```
+await fetch("http://localhost:5000/api/v1/academic-semesters");
+await fetch("http://localhost:5000/api/v1/academic-semesters?title=Summer&code=02&year[gte]=2024");
+await fetch("http://localhost:5000/api/v1/academic-semesters?title=Summer&limit=2&page=1");
+await fetch("http://localhost:5000/api/v1/academic-semesters?title=Summer&sort=-year,code");// sort by multiple filed name with descending and  ascending order
+
+await fetch("http://localhost:5000/api/v1/academic-semesters?title=Summer&fields=-_id,title,year");// show and hide single filed or multiple fields or using together
+
+<!-- output -->
+ "  "data": [
+    {
+      "title": "Summer",
+      "year": "2023"
+    },
+    {
+      "title": "Summer",
+      "year": "2024"
+    },
+    {
+      "title": "Summer",
+      "year": "2026"
+    },
+    {
+      "title": "Summer",
+      "year": "2028"
+    }
+  ]
+
+  <!-- Search -->
+  await fetch("http://localhost:5000/api/v1/academic-semesters?search=sum");
+ <!-- Search with filters combine-->
+ await fetch("http://localhost:5000/api/v1/academic-semesters?search=sum&startMonth=January&year[gte]=2023&sort=-year&page=2&limit=2");
+```
 
 
