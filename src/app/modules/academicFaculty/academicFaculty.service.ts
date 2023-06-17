@@ -1,6 +1,7 @@
 import { IGenericResponse } from '../../../interfaces/common';
 import { IFilters, IQueries } from '../../../interfaces/queryFilters';
 import searcher from '../../../shared/searcher';
+import { academicFacultySearchableFields } from './academicFaculty.constants';
 import { IAcademicFaculty } from './academicFaculty.interface';
 import { AcademicFaculty } from './academicFaculty.model';
 
@@ -15,7 +16,7 @@ const getAllFaculties = async (
   filters: IFilters,
   queries: IQueries
 ): Promise<IGenericResponse<IAcademicFaculty[]>> => {
-  const conditions = searcher(filters, ['title']);
+  const conditions = searcher(filters, academicFacultySearchableFields);
 
   const { limit = 0, skip, fields, sort } = queries;
 
