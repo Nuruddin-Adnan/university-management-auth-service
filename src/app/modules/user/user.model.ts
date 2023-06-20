@@ -16,10 +16,10 @@ const userSchema = new Schema<IUser>(
       type: String,
       required: true,
     },
-    // student: {
-    //   type: Schema.Types.ObjectId,
-    //   ref: 'Student',
-    // },
+    student: {
+      type: Schema.Types.ObjectId,
+      ref: 'Student',
+    },
     // faculty: {
     //   type: Schema.Types.ObjectId,
     //   ref: 'Faculty',
