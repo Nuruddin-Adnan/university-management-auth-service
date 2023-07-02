@@ -1,10 +1,10 @@
 import { Request, Response } from 'express';
-import sendResponse from '../../../shared/sendResponse';
 import httpStatus from 'http-status';
-import queryFilters from '../../../shared/queryFilters';
 import catchAsync from '../../../shared/catchAsync';
-import { StudentService } from './student.service';
+import queryFilters from '../../../shared/queryFilters';
+import sendResponse from '../../../shared/sendResponse';
 import { IStudent } from './student.interface';
+import { StudentService } from './student.service';
 
 const getAllStudents = catchAsync(async (req: Request, res: Response) => {
   const filters = queryFilters(
