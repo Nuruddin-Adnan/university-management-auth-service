@@ -152,7 +152,9 @@ yarn add -D ts-node-dev
 
 ```bash
   "scripts": {
-    "start": "ts-node-dev --respawn --transpile-only src/server.ts"
+    "start": "node dist/server.js",
+    "build": "tsc",
+    "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
   }
 ```
 
@@ -1182,5 +1184,128 @@ await fetch("http://localhost:5000/api/v1/academic-semesters?title=Summer&fields
  <!-- Search with filters combine-->
  await fetch("http://localhost:5000/api/v1/academic-semesters?search=sum&startMonth=January&year[gte]=2023&sort=-year&page=2&limit=2");
 ```
+# JWT
+#### install jsonwebtoken, @types/jsonwebtoken and @types/cookie-parser
+```
+yarn add jsonwebtoken @types/jsonwebtoken @types/cookie-parser
+```
+
+#### src/app.ts
+```
+import cookieParser from 'cookie-parser';
+
+//parser
+app.use(cookieParser());
+```
+
+#### .env file
+```
+JWT_SECRET= 'very-secret'
+JWT_EXPIRES_IN=1d
+JWT_REFRESH_SECRET='very-refresh-secret'
+JWT_REFRESH_EXPIRES_IN=365d
+```
+
+#### src/config/index.ts
+```
+  jwt: {
+    secret: process.env.JWT_SECRET,
+    refresh_secret: process.env.JWT_REFRESH_SECRET,
+    expires_in: process.env.JWT_EXPIRES_IN,
+    refresh_expires_in: process.env.JWT_REFRESH_EXPIRES_IN,
+  },
+  ```
+#### src/enums/user.ts
+```
+/* eslint-disable no-unused-vars */
+export enum ENUM_USER_ROLE {
+  SUPER_ADMIN = 'super_admin',
+  ADMIN = 'admin',
+  STUDENT = 'student',
+  FACULTY = 'faculty',
+}
+```
+#### src/interfaces/index.d.ts
+```
+/* eslint-disable @typescript-eslint/consistent-type-definitions */
+import { JwtPayload } from 'jsonwebtoken';
+
+declare global {
+  namespace Express {
+    interface Request {
+      user: JwtPayload | null;
+    }
+  }
+}
+```
+
+#### src/helpers/jwtHelpers.ts
+```
+import jwt, { JwtPayload, Secret } from 'jsonwebtoken';
+
+const createToken = (
+  payload: Record<string, unknown>,
+  secret: Secret,
+  expireTime: string
+): string => {
+  return jwt.sign(payload, secret, {
+    expiresIn: expireTime,
+  });
+};
+
+const verifyToken = (token: string, secret: Secret): JwtPayload => {
+  return jwt.verify(token, secret) as JwtPayload;
+};
+
+export const jwtHelpers = {
+  createToken,
+  verifyToken,
+};
+```
+#### src/app/middlewares/auth.ts
+```
+import { NextFunction, Request, Response } from 'express';
+import httpStatus from 'http-status';
+import { Secret } from 'jsonwebtoken';
+import config from '../../config';
+import ApiError from '../../errors/ApiError';
+import { jwtHelpers } from '../../helpers/jwtHelpers';
+
+const auth =
+  (...requiredRoles: string[]) =>
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      //get authorization token
+      const token = req.headers.authorization;
+      if (!token) {
+        throw new ApiError(httpStatus.UNAUTHORIZED, 'You are not authorized');
+      }
+      // verify token
+      let verifiedUser = null;
+
+      verifiedUser = jwtHelpers.verifyToken(token, config.jwt.secret as Secret);
+
+      req.user = verifiedUser; // role  , userid
+
+      // role diye guard korar jnno
+      if (requiredRoles.length && !requiredRoles.includes(verifiedUser.role)) {
+        throw new ApiError(httpStatus.FORBIDDEN, 'Forbidden');
+      }
+      next();
+    } catch (error) {
+      next(error);
+    }
+  };
+
+export default auth;
+```
+
+### Uses of JWT
+#### Check the user and auth module for details
+
+
+
+
+
 
 
