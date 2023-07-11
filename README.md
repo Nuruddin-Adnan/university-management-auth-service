@@ -1,4 +1,3 @@
-
 ## Roadmap
 
 - Setup express server with mongodb database
@@ -907,6 +906,7 @@ app.use('/api/v1', routes);
 ## Filters query
 
 #### create src/interfaces/queryFilters.ts
+
 ```
 export type IFilters = {
   sort?: string;
@@ -926,6 +926,7 @@ export type IQueries = {
 ```
 
 #### create src/shared/queryFilters.ts
+
 ```
 import { Request } from 'express';
 import { IFilters, IQueries } from '../interfaces/queryFilters';
@@ -984,7 +985,9 @@ export default queryFilters;
 ### using queryFilters
 
 #### in controller file
+
 <!-- Example -->
+
 ```
 import { Request, Response } from 'express';
 import { UserService } from './user.service';
@@ -1024,6 +1027,7 @@ export const UserController = {
 ```
 
 #### in service file
+
 ```
 import { IUser } from './user.interface';
 import { User } from './user.model';
@@ -1069,6 +1073,7 @@ export const UserService = {
 ## Search function
 
 #### create src/shared/searcher.ts
+
 ```
 import { IFilters } from '../interfaces/queryFilters';
 
@@ -1105,7 +1110,9 @@ export default searcher;
 ```
 
 #### using search with queryFilters in service file
+
 <!-- Example user service -->
+
 ```
 import { IUser } from './user.interface';
 import { User } from './user.model';
@@ -1151,6 +1158,7 @@ export const UserService = {
 ```
 
 #### Some Example Api for filters and search
+
 ```
 await fetch("http://localhost:5000/api/v1/academic-semesters");
 await fetch("http://localhost:5000/api/v1/academic-semesters?title=Summer&code=02&year[gte]=2024");
@@ -1184,13 +1192,17 @@ await fetch("http://localhost:5000/api/v1/academic-semesters?title=Summer&fields
  <!-- Search with filters combine-->
  await fetch("http://localhost:5000/api/v1/academic-semesters?search=sum&startMonth=January&year[gte]=2023&sort=-year&page=2&limit=2");
 ```
+
 # JWT
-#### install jsonwebtoken, @types/jsonwebtoken and @types/cookie-parser
+
+#### install jsonwebtoken, cookie-parser, @types/jsonwebtoken and @types/cookie-parser
+
 ```
-yarn add jsonwebtoken @types/jsonwebtoken @types/cookie-parser
+yarn add jsonwebtoken cookie-parser @types/jsonwebtoken @types/cookie-parser
 ```
 
 #### src/app.ts
+
 ```
 import cookieParser from 'cookie-parser';
 
@@ -1199,6 +1211,7 @@ app.use(cookieParser());
 ```
 
 #### .env file
+
 ```
 JWT_SECRET= 'very-secret'
 JWT_EXPIRES_IN=1d
@@ -1207,6 +1220,7 @@ JWT_REFRESH_EXPIRES_IN=365d
 ```
 
 #### src/config/index.ts
+
 ```
   jwt: {
     secret: process.env.JWT_SECRET,
@@ -1214,8 +1228,10 @@ JWT_REFRESH_EXPIRES_IN=365d
     expires_in: process.env.JWT_EXPIRES_IN,
     refresh_expires_in: process.env.JWT_REFRESH_EXPIRES_IN,
   },
-  ```
+```
+
 #### src/enums/user.ts
+
 ```
 /* eslint-disable no-unused-vars */
 export enum ENUM_USER_ROLE {
@@ -1225,7 +1241,9 @@ export enum ENUM_USER_ROLE {
   FACULTY = 'faculty',
 }
 ```
+
 #### src/interfaces/index.d.ts
+
 ```
 /* eslint-disable @typescript-eslint/consistent-type-definitions */
 import { JwtPayload } from 'jsonwebtoken';
@@ -1240,6 +1258,7 @@ declare global {
 ```
 
 #### src/helpers/jwtHelpers.ts
+
 ```
 import jwt, { JwtPayload, Secret } from 'jsonwebtoken';
 
@@ -1262,7 +1281,9 @@ export const jwtHelpers = {
   verifyToken,
 };
 ```
+
 #### src/app/middlewares/auth.ts
+
 ```
 import { NextFunction, Request, Response } from 'express';
 import httpStatus from 'http-status';
@@ -1301,11 +1322,5 @@ export default auth;
 ```
 
 ### Uses of JWT
+
 #### Check the user and auth module for details
-
-
-
-
-
-
-
